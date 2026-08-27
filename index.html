@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Stages</title>
+<style>
+  :root {
+    /* unified dark theme (matches project data submission page) */
+    --bg:          #0d1526;
+    --page:        #0d1526;   /* page background */
+    --teal:        #14203a;   /* project card = panel */
+    --teal-dark:   #1c2c4d;   /* hover / deeper panel */
+    --teal-line:   #2a3d63;
+    --band:        #1c2c4d;   /* stage band = panel2 */
+    --band-line:   #2a3d63;
+    --panel:       #14203a;   /* stage body panel */
+    --ink:         #e6ecf7;   /* light text */
+    --muted:       #8397bd;
+    --ghost:       #8397bd;
+    --shadow:      rgba(0,0,0,.4);
+    --red:         #e23b4e;   /* accent red */
+    --red-dark:    #c62438;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    padding: 28px 20px 80px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 22px;
+    padding: 0 6px;
+  }
+  header.top h1 {
+    font-size: 15px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--red);
+    margin: 0;
+  }
+  header.top .count { font-size: 13px; color: var(--muted); letter-spacing: .04em; }
+
+  /* ---- Project card ---- */
+  .project {
+    background: var(--teal);
+    border: 1px solid var(--teal-line);
+    border-radius: 22px;
+    padding: 20px 24px 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 18px var(--shadow);
+  }
+  .project.collapsed { padding-bottom: 20px; }
+
+  .project-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .chevron {
+    color: #cfe3f2;
+    font-size: 15px;
+    width: 16px; text-align: center;
+    transition: transform .18s ease;
+    flex: none;
+  }
+  .project.collapsed .chevron { transform: rotate(-90deg); }
+  .project-title {
+    color: #fff;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: .01em;
+    margin: 0;
+    flex: 1 1 auto;
+    background: none; border: none; outline: none;
+    padding: 2px 4px;
+    border-radius: 6px;
+  }
+  .project-title:focus { background: rgba(255,255,255,.12); }
+  .proj-del {
+    flex: none;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.35);
+    color: #d8e8f4;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .15s, background .15s;
+  }
+  .project:hover .proj-del { opacity: 1; }
+  .proj-del:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+  .stages { margin-top: 16px; }
+  .project.collapsed .stages { display: none; }
+
+  /* ---- Stage ---- */
+  .stage { margin-bottom: 12px; }
+  .stage-band {
+    background: var(--band);
+    border: 1px solid var(--band-line);
+    border-radius: 8px;
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .stage.open .stage-band { border-radius: 8px 8px 0 0; }
+  .stage-caret { color: var(--ink); font-size: 12px; width: 12px; transition: transform .18s; flex: none; }
+  .stage.open .stage-caret { transform: rotate(90deg); }
+  .stage-name {
+    flex: 1 1 auto;
+    text-align: center;
+    text-align-last: center;
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    background: transparent; border: none; outline: none;
+    padding: 1px 4px; border-radius: 5px;
+    cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
+  .stage-name:focus { background: rgba(255,255,255,.08); }
+  .stage-name option { color: var(--ink); background: var(--panel2, #1c2c4d); }
+  .stage-del {
+    flex: none;
+    background: transparent; border: none;
+    color: var(--ink);
+    opacity: .45;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 0 4px;
+    border-radius: 5px;
+  }
+  .stage-del:hover { opacity: 1; background: rgba(255,255,255,.12); }
+
+  .stage-body {
+    background: var(--panel);
+    border: 1px solid var(--band-line);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 16px 16px 18px;
+    display: none;
+  }
+  .stage.open .stage-body { display: block; }
+
+  /* files */
+  .file-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  }
+  .dl {
+    background: var(--red);
+    color: #fff;
+    border: 1px solid var(--red-dark);
+    border-radius: 7px;
+    padding: 7px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dl:hover { background: var(--red-dark); }
+  .dl:disabled { background: #2a3d63; color: #6b7da0; border-color: #2a3d63; cursor: not-allowed; opacity: .6; }
+  .dl:disabled:hover { background: #2a3d63; }
+  .dl svg { width: 15px; height: 15px; }
+  .ul {
+    background: var(--teal);
+    color: #fff;
+    border: 1px solid var(--teal-line);
+    border-radius: 7px;
+    padding: 7px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ul:hover { background: var(--teal-dark); }
+  .ul svg { width: 15px; height: 15px; }
+  .sub-data {
+    background: var(--panel2, #1c2c4d);
+    color: var(--ink);
+    border: 1px solid var(--teal-line);
+    border-radius: 7px;
+    padding: 7px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub-data:hover { background: #26365c; border-color: var(--red); }
+  .sub-data svg { width: 15px; height: 15px; }
+  .file-name { font-size: 13px; color: var(--muted); }
+  .file-x {
+    background: none; border: none; color: var(--ghost);
+    cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px;
+  }
+  .file-x:hover { color: var(--red); background: rgba(226,59,78,.14); }
+
+  .add-file {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin: 8px 0 14px;
+    font-size: 13px; color: var(--red);
+    background: none; border: 1px dashed var(--red);
+    border-radius: 7px; padding: 6px 12px; cursor: pointer;
+  }
+  .add-file:hover { background: rgba(226,59,78,.12); }
+
+  /* notes */
+  .notes-label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); font-weight: 600; margin: 6px 0 6px;
+  }
+  textarea.notes {
+    width: 100%;
+    min-height: 70px;
+    resize: vertical;
+    border: 1px solid var(--teal-line);
+    border-radius: 7px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--panel2, #1c2c4d);
+    outline: none;
+  }
+  textarea.notes:focus { border-color: var(--red); background: #223354; }
+  textarea.notes::placeholder { color: var(--muted); }
+
+  /* add-stage + add-project ghost bars */
+  .add-stage {
+    width: 100%;
+    background: rgba(255,255,255,.05);
+    border: 1px dashed var(--teal-line);
+    border-radius: 8px;
+    color: var(--muted);
+    padding: 9px 14px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+  .add-stage:hover { background: rgba(255,255,255,.1); color: var(--ink); }
+
+  .add-project {
+    width: 100%;
+    background: var(--teal);
+    border: 1px solid var(--teal-line);
+    border-radius: 22px;
+    color: var(--muted);
+    padding: 26px 24px;
+    text-align: left;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    cursor: pointer;
+    box-shadow: 0 6px 18px var(--shadow);
+  }
+  .add-project:hover { color: var(--ink); }
+
+  .empty {
+    color: var(--muted); text-align: center; padding: 40px 0; font-size: 15px;
+  }
+
+  /* ---- user bar ---- */
+  header.top { flex-wrap: wrap; }
+  .userbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .ub-label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); font-weight: 600;
+  }
+  #userSelect {
+    font: inherit; font-size: 14px; font-weight: 600;
+    color: var(--ink);
+    background: var(--panel2, #1c2c4d);
+    border: 1px solid var(--teal-line);
+    border-radius: 8px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  #userSelect option { background: var(--panel2, #1c2c4d); color: var(--ink); }
+  .ub-btn {
+    font: inherit; font-size: 13px; font-weight: 600;
+    color: var(--ink);
+    background: var(--panel2, #1c2c4d);
+    border: 1px solid var(--teal-line);
+    border-radius: 8px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  .ub-btn:hover { background: #26365c; }
+  .ub-btn.primary {
+    background: var(--red); color: #fff; border-color: var(--red-dark);
+  }
+  .ub-btn.primary:hover { background: var(--red-dark); }
+
+  /* ---- project assignment row ---- */
+  .assign-row {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    margin-top: 12px;
+  }
+  .assign-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: #b9c8de; font-weight: 600; margin-right: 2px;
+  }
+  .chip {
+    font-size: 12px; font-weight: 600;
+    border-radius: 999px; padding: 3px 10px;
+    border: 1px solid rgba(255,255,255,.28);
+    color: #cdd9ec; background: rgba(255,255,255,.06);
+    cursor: pointer; user-select: none;
+  }
+  .chip:hover { background: rgba(255,255,255,.14); }
+  .chip.on {
+    background: var(--red); border-color: var(--red-dark); color: #fff;
+  }
+  .chip.on:hover { background: var(--red-dark); }
+
+  /* ---- modal ---- */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(10,23,48,.55);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+    z-index: 50;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--teal-line); border-radius: 16px; width: 100%; max-width: 420px;
+    padding: 22px 22px 18px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .modal-head h2 { margin: 0; font-size: 19px; color: var(--ink); }
+  .modal-x { background: none; border: none; font-size: 24px; line-height: 1; color: var(--muted); cursor: pointer; }
+  .modal-x:hover { color: var(--red); }
+  .user-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .user-item {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--teal-line); border-radius: 9px; padding: 8px 10px;
+    background: var(--panel2, #1c2c4d);
+  }
+  .user-item input {
+    flex: 1 1 auto; font: inherit; font-size: 14px; color: var(--ink);
+    border: none; outline: none; background: transparent;
+  }
+  .user-item input:focus { background: rgba(255,255,255,.06); border-radius: 5px; }
+  .user-item .u-del {
+    background: none; border: none; color: var(--ghost); cursor: pointer;
+    font-size: 16px; padding: 2px 6px; border-radius: 5px;
+  }
+  .user-item .u-del:hover { color: var(--red); background: rgba(226,59,78,.14); }
+  .add-user-row { display: flex; gap: 8px; }
+  .add-user-row input {
+    flex: 1 1 auto; font: inherit; font-size: 14px; color: var(--ink);
+    background: var(--panel2, #1c2c4d);
+    border: 1px solid var(--teal-line); border-radius: 9px; padding: 8px 12px; outline: none;
+  }
+  .add-user-row input:focus { border-color: var(--red); }
+  .modal-note { font-size: 12px; color: var(--muted); margin: 12px 0 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Project Stages</h1>
+    <div class="userbar">
+      <label class="ub-label" for="userSelect">Viewing as</label>
+      <select id="userSelect"></select>
+      <button class="ub-btn" id="manageUsers">Manage users</button>
+      <span class="count" id="count"></span>
+    </div>
+  </header>
+
+  <div id="projects"></div>
+
+  <button class="add-project" id="addProject">+ PROJECT</button>
+</div>
+
+<div class="modal-backdrop" id="userModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Manage users</h2>
+      <button class="modal-x" id="closeUsers">&times;</button>
+    </div>
+    <div class="user-list" id="userList"></div>
+    <div class="add-user-row">
+      <input type="text" id="newUserName" placeholder="New user name" />
+      <button class="ub-btn primary" id="addUser">Add user</button>
+    </div>
+    <p class="modal-note">Users and assignments are saved to the shared Supabase database.</p>
+  </div>
+</div>
+
+<!-- Supabase client (UMD build, no build step) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ============================================================
+// SUPABASE SETUP  (open / no-login version)
+// WARNING: With no login and the anon key in this public page,
+// anyone with the URL can read, edit, and delete all data. This
+// is fine for testing with your team; add Supabase Auth + RLS
+// before putting anything sensitive in here.
+// ============================================================
+const SUPABASE_URL = "https://YOURPROJECT.supabase.co";       // <-- from Settings > API
+const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_PUBLIC_KEY_HERE";  // <-- anon/public key, NOT service_role
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// In-memory mirror of the DB in the shape the render code expects.
+let store = { users: [], projects: [], currentUserId: "__all__" };
+
+// Load the whole dataset from Supabase into `store`.
+async function loadFromDb() {
+  const [users, projects, assignees, stages, files, notesReady] = await Promise.all([
+    db.from("users").select("*").order("created_at"),
+    db.from("projects").select("*").order("position"),
+    db.from("project_assignees").select("*"),
+    db.from("stages").select("*").order("position"),
+    db.from("stage_files").select("*").order("created_at"),
+    Promise.resolve(null),
+  ]);
+
+  if (users.error || projects.error || stages.error) {
+    console.error("Supabase load error:", users.error || projects.error || stages.error);
+    root.innerHTML = '<div class="empty">Could not reach the database. Check the Supabase URL/key and your network (ThreatLocker allowlist).</div>';
+    return;
+  }
+
+  const assignByProject = {};
+  (assignees.data || []).forEach(a => {
+    (assignByProject[a.project_id] = assignByProject[a.project_id] || []).push(a.user_id);
+  });
+  const filesByStage = {};
+  (files.data || []).forEach(f => {
+    (filesByStage[f.stage_id] = filesByStage[f.stage_id] || []).push(
+      { id: f.id, name: f.name, content: f.content, mime: f.mime }
+    );
+  });
+  const stagesByProject = {};
+  (stages.data || []).forEach(st => {
+    (stagesByProject[st.project_id] = stagesByProject[st.project_id] || []).push({
+      id: st.id, name: st.name, notes: st.notes || "", open: false,
+      files: filesByStage[st.id] || [],
+    });
+  });
+
+  store.users = (users.data || []).map(u => ({ id: u.id, name: u.name }));
+  store.projects = (projects.data || []).map(p => ({
+    id: p.id, name: p.name, collapsed: p.collapsed,
+    assignees: assignByProject[p.id] || [],
+    stages: stagesByProject[p.id] || [],
+  }));
+  render();
+}
+
+// Small helpers that persist a single change. They update `store`
+// optimistically (already done by the caller) then write to the DB.
+async function dbInsert(table, row) {
+  const { data, error } = await db.from(table).insert(row).select().single();
+  if (error) { console.error("insert " + table, error); return null; }
+  return data;
+}
+async function dbUpdate(table, id, patch) {
+  const { error } = await db.from(table).update(patch).eq("id", id);
+  if (error) console.error("update " + table, error);
+}
+async function dbDelete(table, id) {
+  const { error } = await db.from(table).delete().eq("id", id);
+  if (error) console.error("delete " + table, error);
+}
+
+// Debounce text fields (project/stage name, notes) so we don't
+// write on every keystroke.
+const debouncers = {};
+function debounce(key, fn, ms = 500) {
+  clearTimeout(debouncers[key]);
+  debouncers[key] = setTimeout(fn, ms);
+}
+
+function userName(id) {
+  const u = store.users.find(u => u.id === id);
+  return u ? u.name : "Unknown";
+}
+function visibleProjects() {
+  if (store.currentUserId === "__all__") return store.projects;
+  return store.projects.filter(p => p.assignees.includes(store.currentUserId));
+}
+
+const dlIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>';
+const ulIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 3h16"/></svg>';
+const dbIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h6a1 1 0 011 1v1H8V6a1 1 0 011-1z"/><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 12h6M9 16h4"/></svg>';
+
+const root = document.getElementById("projects");
+
+function render() {
+  renderUserSelect();
+  root.innerHTML = "";
+  const list = visibleProjects();
+  document.getElementById("count").textContent =
+    list.length + (list.length === 1 ? " project" : " projects");
+
+  if (!list.length) {
+    const msg = store.currentUserId === "__all__"
+      ? "No projects yet. Add one below to get started."
+      : "No projects assigned to " + userName(store.currentUserId) + ".";
+    root.innerHTML = '<div class="empty">' + msg + '</div>';
+    return;
+  }
+
+  list.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "project" + (p.collapsed ? " collapsed" : "");
+
+    const head = document.createElement("div");
+    head.className = "project-head";
+    head.innerHTML = '<span class="chevron">▾</span>';
+
+    const title = document.createElement("input");
+    title.className = "project-title";
+    title.value = p.name;
+    title.addEventListener("click", e => e.stopPropagation());
+    title.addEventListener("input", () => {
+      p.name = title.value;
+      debounce("proj-" + p.id, () => dbUpdate("projects", p.id, { name: p.name }));
+    });
+    head.appendChild(title);
+
+    const pdel = document.createElement("button");
+    pdel.className = "proj-del";
+    pdel.textContent = "Delete";
+    pdel.addEventListener("click", e => {
+      e.stopPropagation();
+      if (confirm("Delete " + (p.name || "this project") + "?")) {
+        store.projects = store.projects.filter(x => x !== p);
+        dbDelete("projects", p.id);  // cascade removes stages/files/etc.
+        render();
+      }
+    });
+    head.appendChild(pdel);
+
+    head.addEventListener("click", () => {
+      p.collapsed = !p.collapsed;
+      dbUpdate("projects", p.id, { collapsed: p.collapsed });
+      render();
+    });
+    card.appendChild(head);
+
+    // assignment chips (hidden when a card is collapsed)
+    if (!p.collapsed) {
+      const assign = document.createElement("div");
+      assign.className = "assign-row";
+      const al = document.createElement("span");
+      al.className = "assign-label";
+      al.textContent = "Assigned to";
+      assign.appendChild(al);
+
+      if (!store.users.length) {
+        const none = document.createElement("span");
+        none.className = "chip"; none.style.cursor = "default";
+        none.textContent = "No users — add some";
+        assign.appendChild(none);
+      } else {
+        store.users.forEach(u => {
+          const chip = document.createElement("span");
+          const on = p.assignees.includes(u.id);
+          chip.className = "chip" + (on ? " on" : "");
+          chip.textContent = u.name;
+          chip.addEventListener("click", ev => {
+            ev.stopPropagation();
+            if (p.assignees.includes(u.id)) {
+              p.assignees = p.assignees.filter(id => id !== u.id);
+              db.from("project_assignees").delete()
+                .eq("project_id", p.id).eq("user_id", u.id)
+                .then(({ error }) => { if (error) console.error("unassign", error); });
+            } else {
+              p.assignees.push(u.id);
+              db.from("project_assignees").insert({ project_id: p.id, user_id: u.id })
+                .then(({ error }) => { if (error) console.error("assign", error); });
+            }
+            render();
+          });
+          assign.appendChild(chip);
+        });
+      }
+      card.appendChild(assign);
+    }
+
+    const stagesWrap = document.createElement("div");
+    stagesWrap.className = "stages";
+
+    p.stages.forEach(s => stagesWrap.appendChild(renderStage(p, s)));
+
+    const addStage = document.createElement("button");
+    addStage.className = "add-stage";
+    addStage.textContent = "+ Stage";
+    addStage.addEventListener("click", async () => {
+      const s = { id: null, name: "Preliminary", open: true, notes: "", files: [] };
+      p.stages.push(s);
+      render();
+      const row = await dbInsert("stages", {
+        project_id: p.id, name: s.name, notes: "", position: p.stages.length,
+      });
+      if (row) { s.id = row.id; }
+    });
+    stagesWrap.appendChild(addStage);
+
+    card.appendChild(stagesWrap);
+    root.appendChild(card);
+  });
+}
+
+function renderStage(p, s) {
+  const stage = document.createElement("div");
+  stage.className = "stage" + (s.open ? " open" : "");
+
+  const band = document.createElement("div");
+  band.className = "stage-band";
+  band.innerHTML = '<span class="stage-caret">▸</span>';
+
+  const name = document.createElement("select");
+  name.className = "stage-name";
+  ["Preliminary", "As-Built"].forEach(opt => {
+    const o = document.createElement("option");
+    o.value = opt; o.textContent = opt;
+    name.appendChild(o);
+  });
+  // keep any legacy custom name selectable so old data still shows
+  if (!["Preliminary", "As-Built"].includes(s.name)) {
+    const o = document.createElement("option");
+    o.value = s.name; o.textContent = s.name;
+    name.appendChild(o);
+  }
+  name.value = s.name;
+  name.addEventListener("click", e => e.stopPropagation());
+  name.addEventListener("change", () => {
+    s.name = name.value;
+    if (s.id) dbUpdate("stages", s.id, { name: s.name });
+  });
+  band.appendChild(name);
+
+  const sdel = document.createElement("button");
+  sdel.className = "stage-del";
+  sdel.innerHTML = "&times;";
+  sdel.title = "Remove stage";
+  sdel.addEventListener("click", e => {
+    e.stopPropagation();
+    p.stages = p.stages.filter(x => x !== s);
+    if (s.id) dbDelete("stages", s.id);  // cascade removes its files
+    render();
+  });
+  band.appendChild(sdel);
+
+  // open/close is a view-only state, not persisted
+  band.addEventListener("click", () => { s.open = !s.open; render(); });
+  stage.appendChild(band);
+
+  const body = document.createElement("div");
+  body.className = "stage-body";
+
+  // Single action row: Upload FXL + Download FXL side by side.
+  // Only the uploaded FXL lives here, so we use the first file on the stage.
+  const actionRow = document.createElement("div");
+  actionRow.className = "file-row";
+
+  const ul = document.createElement("button");
+  ul.className = "ul";
+  ul.innerHTML = ulIcon + "<span>Upload FXL</span>";
+  ul.addEventListener("click", () => {
+    if (!s.id) { alert("Give this new stage a moment to save, then try again."); return; }
+    const url = "fxl-feature-matcher.html?stage=" + encodeURIComponent(s.id) +
+                "&projectName=" + encodeURIComponent(p.name) +
+                "&stageName=" + encodeURIComponent(s.name);
+    window.open(url, "_blank");
+  });
+  actionRow.appendChild(ul);
+
+  const fxl = s.files[0];  // the uploaded FXL, if any
+
+  const dl = document.createElement("button");
+  dl.className = "dl";
+  dl.innerHTML = dlIcon + "<span>Download FXL</span>";
+  dl.disabled = !fxl || fxl.content == null;
+  dl.addEventListener("click", () => { if (fxl) downloadFile(fxl, p, s); });
+  actionRow.appendChild(dl);
+
+  const sub = document.createElement("button");
+  sub.className = "sub-data";
+  sub.innerHTML = dbIcon + "<span>Submit Data</span>";
+  sub.addEventListener("click", () => {
+    if (!s.id) { alert("Give this new stage a moment to save, then try again."); return; }
+    const url = "project-data-submission.html?stage=" + encodeURIComponent(s.id) +
+                "&projectName=" + encodeURIComponent(p.name) +
+                "&stageName=" + encodeURIComponent(s.name);
+    window.open(url, "_blank");
+  });
+  actionRow.appendChild(sub);
+
+  if (fxl) {
+    const fn = document.createElement("span");
+    fn.className = "file-name";
+    fn.textContent = fxl.name;
+    actionRow.appendChild(fn);
+
+    const x = document.createElement("button");
+    x.className = "file-x";
+    x.innerHTML = "&times;";
+    x.title = "Remove uploaded FXL";
+    x.addEventListener("click", () => {
+      s.files = s.files.filter(y => y !== fxl);
+      if (fxl.id) dbDelete("stage_files", fxl.id);
+      render();
+    });
+    actionRow.appendChild(x);
+  }
+
+  body.appendChild(actionRow);
+
+  const nl = document.createElement("div");
+  nl.className = "notes-label";
+  nl.textContent = "Survey notes";
+  body.appendChild(nl);
+
+  const ta = document.createElement("textarea");
+  ta.className = "notes";
+  ta.placeholder = "Add notes for this stage…";
+  ta.value = s.notes || "";
+  ta.addEventListener("input", () => {
+    s.notes = ta.value;
+    if (s.id) debounce("notes-" + s.id, () => dbUpdate("stages", s.id, { notes: s.notes }));
+  });
+  body.appendChild(ta);
+
+  stage.appendChild(body);
+  return stage;
+}
+
+// Downloads the actual uploaded file bytes if present. Files gain `content`
+// when uploaded via the FXL matcher or the "+ Add file" picker.
+function downloadFile(f, p, s) {
+  if (f.content == null) {
+    alert("No file has been uploaded for \"" + f.name + "\" yet.\n\n" +
+          "Use \"Upload FXL\" to add one, or remove this entry.");
+    return;
+  }
+  const blob = new Blob([f.content], { type: f.mime || "application/octet-stream" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = f.name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+document.getElementById("addProject").addEventListener("click", async () => {
+  // new projects are auto-assigned to whoever you're viewing as, so they show up
+  const assignTo = store.currentUserId === "__all__" ? null : store.currentUserId;
+  const p = { id: null, name: "New Project", collapsed: false,
+              assignees: assignTo ? [assignTo] : [], stages: [] };
+  store.projects.push(p);
+  render();
+  const row = await dbInsert("projects", {
+    name: p.name, collapsed: false, position: store.projects.length,
+  });
+  if (row) {
+    p.id = row.id;
+    if (assignTo) {
+      await db.from("project_assignees").insert({ project_id: p.id, user_id: assignTo });
+    }
+  }
+});
+
+/* ---- user switcher ---- */
+const userSelect = document.getElementById("userSelect");
+function renderUserSelect() {
+  userSelect.innerHTML = "";
+  const all = document.createElement("option");
+  all.value = "__all__"; all.textContent = "All users (admin)";
+  userSelect.appendChild(all);
+  store.users.forEach(u => {
+    const o = document.createElement("option");
+    o.value = u.id; o.textContent = u.name;
+    userSelect.appendChild(o);
+  });
+  // fall back to admin view if the selected user was deleted
+  if (store.currentUserId !== "__all__" && !store.users.some(u => u.id === store.currentUserId))
+    store.currentUserId = "__all__";
+  userSelect.value = store.currentUserId;
+}
+userSelect.addEventListener("change", () => {
+  store.currentUserId = userSelect.value;  // view-only, not persisted
+  render();
+});
+
+/* ---- manage-users modal ---- */
+const modal = document.getElementById("userModal");
+const userListEl = document.getElementById("userList");
+
+function renderUserList() {
+  userListEl.innerHTML = "";
+  if (!store.users.length) {
+    userListEl.innerHTML = '<div class="empty" style="padding:16px 0">No users yet.</div>';
+    return;
+  }
+  store.users.forEach(u => {
+    const row = document.createElement("div");
+    row.className = "user-item";
+
+    const inp = document.createElement("input");
+    inp.value = u.name;
+    inp.addEventListener("input", () => {
+      u.name = inp.value;
+      debounce("user-" + u.id, () => dbUpdate("users", u.id, { name: u.name }));
+      render();
+    });
+    row.appendChild(inp);
+
+    const del = document.createElement("button");
+    del.className = "u-del"; del.innerHTML = "&times;"; del.title = "Remove user";
+    del.addEventListener("click", () => {
+      if (!confirm("Remove " + (u.name || "this user") + "? They'll be unassigned from all projects.")) return;
+      store.users = store.users.filter(x => x !== u);
+      store.projects.forEach(p => { p.assignees = p.assignees.filter(id => id !== u.id); });
+      dbDelete("users", u.id);  // cascade removes their project_assignees rows
+      renderUserList(); render();
+    });
+    row.appendChild(del);
+
+    userListEl.appendChild(row);
+  });
+}
+
+function openUsers() { renderUserList(); modal.classList.add("open"); }
+function closeUsers() { modal.classList.remove("open"); }
+
+document.getElementById("manageUsers").addEventListener("click", openUsers);
+document.getElementById("closeUsers").addEventListener("click", closeUsers);
+modal.addEventListener("click", e => { if (e.target === modal) closeUsers(); });
+
+const newUserName = document.getElementById("newUserName");
+async function addUser() {
+  const nm = newUserName.value.trim();
+  if (!nm) return;
+  const u = { id: null, name: nm };
+  store.users.push(u);
+  newUserName.value = "";
+  renderUserList(); render();
+  const row = await dbInsert("users", { name: nm });
+  if (row) u.id = row.id;
+}
+document.getElementById("addUser").addEventListener("click", addUser);
+newUserName.addEventListener("keydown", e => { if (e.key === "Enter") addUser(); });
+
+// When the FXL matcher or submission page (another tab) changes data,
+// reload from the database on focus so new files/edits show up here.
+let lastFocusReload = 0;
+window.addEventListener("focus", () => {
+  const now = Date.now();
+  if (now - lastFocusReload > 1500) { lastFocusReload = now; loadFromDb(); }
+});
+
+// initial load from Supabase
+loadFromDb();
+</script>
+</body>
+</html>
