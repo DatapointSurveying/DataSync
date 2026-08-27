@@ -458,8 +458,8 @@
 // is fine for testing with your team; add Supabase Auth + RLS
 // before putting anything sensitive in here.
 // ============================================================
-const SUPABASE_URL = "https://YOURPROJECT.supabase.co";       // <-- from Settings > API
-const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_PUBLIC_KEY_HERE";  // <-- anon/public key, NOT service_role
+const SUPABASE_URL = "https://ccdsmxkxyejuxclcahng.supabase.co";       // <-- from Settings > API
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZHNteGt4eWVqdXhjbGNhaG5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDU2NDcsImV4cCI6MjEwMzI4MTY0N30.GhlEPA_IbzAHOtNnI7-71n1b25EGUgOv5Bo_s9azVvA";  // <-- anon/public key, NOT service_role
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // In-memory mirror of the DB in the shape the render code expects.
