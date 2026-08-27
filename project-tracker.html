@@ -1,3 +1,17 @@
+<!-- Supabase client (UMD build from CDN — no build step) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Your project's values from Supabase → Settings → API
+  const SUPABASE_URL = "https://YOURPROJECT.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOi...your-anon-public-key...";
+
+  // `supabase` is the global the UMD script exposes; createClient makes your client.
+  // Named `db` so it doesn't collide with the library global.
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+
+<!-- your existing app script goes here, after this -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
